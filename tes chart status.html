@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script>
+Chart.register(ChartDataLabels);
+</script>
+
+<style>
+
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #f5f8fc;
+}
+
+.card {
+    background: white;
+    margin: 12px;
+    padding: 20px;
+    border-radius: 20px;
+}
+
+.title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #172B4D;
+    margin-bottom: 10px;
+}
+
+.chart {
+    height: 280px;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+    <div class="title">
+        Status Pangkat Pegawai
+    </div>
+
+    <div class="chart">
+        <canvas id="pangkat"></canvas>
+    </div>
+
+</div>
+
+
+<div class="card">
+
+    <div class="title">
+        Status Kenaikan Gaji Berkala
+    </div>
+
+    <div class="chart">
+        <canvas id="berkala"></canvas>
+    </div>
+
+</div>
+
+
+<script>
+
+// ==========================================
+// URL APP SCRIPT
+// ==========================================
+
+const URL_APP_SCRIPT =
+"https://script.google.com/macros/s/AKfycbwQbA-Szf_FBgkfcOc3NXjrR7FAUqUnGDf85hUZKT8jx9h-r9SYf0WwX_e0JhcTq5H6zw/exec?func=CHART_STATUS&SH=Sheet1";
+
+
+// ==========================================
+// VARIABEL CHART
+// ==========================================
+
+let chartPangkat = null;
+let chartBerkala = null;
+
+
+// ==========================================
+// BUAT CHART
+// ==========================================
+
+function buatChart(id, data) {
+
+    const ctx = document
+        .getElementById(id)
+        .getContext('2d');
+
+    const nilai = [
+        data.Aman || 0,
+        data["H-90"] || 0,
+        data["H-60"] || 0,
+        data["H-30"] || 0,
+        data["H-7"] || 0
+    ];
+
+    const namaStatus = [
+        'Aman',
+        'H-90',
+        'H-60',
+        'H-30',
+        'H-7'
+    ];
+
+    return new Chart(ctx, {
+
+        type: 'doughnut',
+
+        data: {
+
+            labels: namaStatus,
+
+            datasets: [{
+
+                data: nilai,
+
+                backgroundColor: [
+                    '#22C55E',
+                    '#FACC15',
+                    '#FB923C',
+                    '#EF4444',
+                    '#8B5CF6'
+                ],
+
+                borderWidth: 2,
+                borderColor: '#FFFFFF'
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            cutout: '55%',
+
+            plugins: {
+
+                // ==================================
+                // TULISAN DI DALAM LINGKARAN
+                // ==================================
+
+                datalabels: {
+
+                    display: function(context) {
+
+                        return context.dataset.data[
+                            context.dataIndex
+                        ] > 0;
+
+                    },
+
+                    color: '#FFFFFF',
+
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    },
+
+                    textAlign: 'center',
+
+                    formatter: function(value, context) {
+
+                        const label =
+                            context.chart.data.labels[
+                                context.dataIndex
+                            ];
+
+                        return [
+                            label,
+                            value
+                        ];
+
+                    }
+
+                },
+
+                // ==================================
+                // LEGEND
+                // ==================================
+
+                legend: {
+
+                    position: 'bottom',
+
+                    labels: {
+
+                        padding: 15
+
+                    }
+
+                }
+
+            }
+
+        },
+
+        plugins: [
+            ChartDataLabels
+        ]
+
+    });
+
+}
+
+
+// ==========================================
+// AMBIL DATA DARI APP SCRIPT
+// ==========================================
+
+function ambilData() {
+
+    fetch(URL_APP_SCRIPT)
+
+        .then(response => {
+
+            if (!response.ok) {
+                throw new Error(
+                    "HTTP Error: " + response.status
+                );
+            }
+
+            return response.json();
+
+        })
+
+        .then(data => {
+
+            console.log("Data App Script:", data);
+
+
+            // ==================================
+            // HAPUS CHART LAMA
+            // ==================================
+
+            if (chartPangkat) {
+                chartPangkat.destroy();
+            }
+
+            if (chartBerkala) {
+                chartBerkala.destroy();
+            }
+
+
+            // ==================================
+            // BUAT CHART PANGKAT
+            // ==================================
+
+            chartPangkat = buatChart(
+                'pangkat',
+                data.statusPangkat
+            );
+
+
+            // ==================================
+            // BUAT CHART BERKALA
+            // ==================================
+
+            chartBerkala = buatChart(
+                'berkala',
+                data.statusBerkala
+            );
+
+        })
+
+        .catch(error => {
+
+            console.error(
+                "Gagal mengambil data:",
+                error
+            );
+
+        });
+
+}
+
+
+// ==========================================
+// JALANKAN SAAT HALAMAN DIBUKA
+// ==========================================
+
+ambilData();
+
+
+// ==========================================
+// REFRESH DATA SETIAP 60 DETIK
+// ==========================================
+
+setInterval(
+    ambilData,
+    60000
+);
+
+</script>
+
+</body>
+
+</html>

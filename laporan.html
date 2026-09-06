@@ -345,7 +345,7 @@ td.center {
 
 <button
     class="print-button"
-    onclick="window.print()">
+    onclick="mintaCetak()">
 
     🖨️ CETAK / SIMPAN PDF
 
@@ -803,6 +803,20 @@ fetch(URL_APP_SCRIPT)
 
 });
 
+    function mintaCetak() {
+
+    if (window.Kodular) {
+
+        window.Kodular.setWebViewString("CETAK");
+
+    } else {
+
+        window.print();
+
+    }
+
+}
+    
 </script>
 
 </body>

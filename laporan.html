@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Laporan Kepegawaian</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f3f6fa;
+    color: #172b4d;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+}
+
+/* HEADER */
+
+.header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+    text-transform: uppercase;
+}
+
+.header h2 {
+    margin: 6px 0 0;
+    font-size: 20px;
+    text-transform: uppercase;
+}
+
+.header p {
+    margin: 8px 0 0;
+    font-size: 14px;
+}
+
+/* REKAP */
+
+.rekap {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.rekap-item {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    border-radius: 6px;
+}
+
+.rekap-item .status {
+    font-weight: bold;
+}
+
+.rekap-item .jumlah {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* TABLE */
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+th {
+    background: #172b4d;
+    color: white;
+    padding: 9px 7px;
+    border: 1px solid #ccc;
+    text-align: center;
+}
+
+td {
+    padding: 8px 7px;
+    border: 1px solid #ccc;
+}
+
+td.center {
+    text-align: center;
+}
+
+/* STATUS */
+
+.status-cell {
+    font-weight: bold;
+    text-align: center;
+}
+
+.aman {
+    color: #16a34a;
+}
+
+.h90 {
+    color: #ca8a04;
+}
+
+.h60 {
+    color: #ea580c;
+}
+
+.h30 {
+    color: #dc2626;
+}
+
+.h7 {
+    color: #7c3aed;
+}
+
+/* FOOTER */
+
+.footer {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ttd {
+    width: 280px;
+    text-align: center;
+}
+
+.ttd-space {
+    height: 70px;
+}
+
+/* BUTTON */
+
+.print-button {
+    position: fixed;
+    right: 25px;
+    bottom: 25px;
+    background: #172b4d;
+    color: white;
+    border: none;
+    padding: 13px 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+
+.print-button:hover {
+    opacity: 0.9;
+}
+
+/* LOADING */
+
+.loading {
+    text-align: center;
+    padding: 50px;
+    font-size: 18px;
+}
+
+.error {
+    text-align: center;
+    padding: 40px;
+    color: #dc2626;
+}
+
+/* PRINT */
+
+@media print {
+
+    @page {
+        size: A4 landscape;
+        margin: 12mm;
+    }
+
+    body {
+        background: white;
+        padding: 0;
+    }
+
+    .container {
+        max-width: none;
+        padding: 0;
+        border-radius: 0;
+    }
+
+    .print-button {
+        display: none;
+    }
+
+    table {
+        font-size: 10px;
+    }
+
+    th {
+        padding: 6px;
+    }
+
+    td {
+        padding: 6px;
+    }
+
+    .rekap {
+        gap: 5px;
+    }
+
+    .rekap-item {
+        padding: 6px;
+    }
+
+    .footer {
+        break-inside: avoid;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div id="loading" class="loading">
+        Memuat data laporan...
+    </div>
+
+    <div id="laporan" style="display:none;">
+
+        <div class="header">
+
+            <h1>LAPORAN REKAP</h1>
+
+            <h2 id="judulLaporan">
+                LAPORAN KEPEGAWAIAN
+            </h2>
+
+            <p>
+                Tanggal Cetak:
+                <span id="tanggalCetak"></span>
+            </p>
+
+            <p>
+                Total Pegawai:
+                <strong id="totalPegawai"></strong>
+            </p>
+
+        </div>
+
+        <!-- REKAP STATUS -->
+
+        <div id="rekapStatus" class="rekap">
+
+            <div class="rekap-item">
+                <div class="status">Aman</div>
+                <div id="aman" class="jumlah">0</div>
+            </div>
+
+            <div class="rekap-item">
+                <div class="status">H-90</div>
+                <div id="h90" class="jumlah">0</div>
+            </div>
+
+            <div class="rekap-item">
+                <div class="status">H-60</div>
+                <div id="h60" class="jumlah">0</div>
+            </div>
+
+            <div class="rekap-item">
+                <div class="status">H-30</div>
+                <div id="h30" class="jumlah">0</div>
+            </div>
+
+            <div class="rekap-item">
+                <div class="status">H-7</div>
+                <div id="h7" class="jumlah">0</div>
+            </div>
+
+        </div>
+
+        <!-- TABLE -->
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead id="tableHead"></thead>
+
+                <tbody id="tableBody"></tbody>
+
+            </table>
+
+        </div>
+
+        <!-- TANDA TANGAN -->
+
+        <div class="footer">
+
+            <div class="ttd">
+
+                <div>
+                    Mengetahui,
+                </div>
+
+                <div class="ttd-space"></div>
+
+                <strong>
+                    ........................................
+                </strong>
+
+                <br>
+
+                <span>
+                    NIP. ...................................
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<button
+    class="print-button"
+    onclick="window.print()">
+
+    🖨️ CETAK / SIMPAN PDF
+
+</button>
+
+
+<script>
+
+const URL_APP_SCRIPT =
+"https://script.google.com/macros/s/AKfycbwQbA-Szf_FBgkfcOc3NXjrR7FAUqUnGDf85hUZKT8jx9h-r9SYf0WwX_e0JhcTq5H6zw/exec?func=LAPORAN&SH=Sheet1";
+
+
+/* =====================================
+   TENTUKAN JENIS LAPORAN
+===================================== */
+
+const parameter =
+new URLSearchParams(window.location.search);
+
+const jenis =
+parameter.get("jenis") || "pangkat";
+
+
+/* =====================================
+   FORMAT TANGGAL
+===================================== */
+
+function tanggalSekarang() {
+
+    const tanggal = new Date();
+
+    return tanggal.toLocaleDateString(
+        "id-ID",
+        {
+            day: "2-digit",
+            month: "long",
+            year: "numeric"
+        }
+    );
+
+}
+
+
+/* =====================================
+   FORMAT STATUS
+===================================== */
+
+function classStatus(status) {
+
+    if (status === "Aman") return "aman";
+
+    if (status === "H-90") return "h90";
+
+    if (status === "H-60") return "h60";
+
+    if (status === "H-30") return "h30";
+
+    if (status === "H-7") return "h7";
+
+    return "";
+
+}
+
+
+/* =====================================
+   REKAP STATUS
+===================================== */
+
+function tampilkanRekap(statusData) {
+
+    document.getElementById("aman").textContent =
+        statusData.Aman || 0;
+
+    document.getElementById("h90").textContent =
+        statusData["H-90"] || 0;
+
+    document.getElementById("h60").textContent =
+        statusData["H-60"] || 0;
+
+    document.getElementById("h30").textContent =
+        statusData["H-30"] || 0;
+
+    document.getElementById("h7").textContent =
+        statusData["H-7"] || 0;
+
+}
+
+
+/* =====================================
+   LAPORAN PANGKAT
+===================================== */
+
+function laporanPangkat(data) {
+
+    document.getElementById("judulLaporan").textContent =
+        "STATUS KENAIKAN PANGKAT";
+
+    tampilkanRekap(
+        hitungStatus(data, "statusPangkat")
+    );
+
+    document.getElementById("tableHead").innerHTML = `
+
+        <tr>
+
+            <th>No</th>
+            <th>NIP</th>
+            <th>Nama</th>
+            <th>KP</th>
+            <th>Pangkat Sekarang</th>
+            <th>Sisa Hari</th>
+            <th>Status</th>
+
+        </tr>
+    `;
+
+    let html = "";
+
+    data.forEach(function(item, index) {
+
+        html += `
+
+            <tr>
+
+                <td class="center">
+                    ${index + 1}
+                </td>
+
+                <td>
+                    ${item.nip}
+                </td>
+
+                <td>
+                    ${item.nama}
+                </td>
+
+                <td class="center">
+                    ${item.kp}
+                </td>
+
+                <td class="center">
+                    ${item.pangkatSekarang}
+                </td>
+
+                <td class="center">
+                    ${item.sisaHariPangkat}
+                </td>
+
+                <td class="status-cell ${classStatus(item.statusPangkat)}">
+                    ${item.statusPangkat}
+                </td>
+
+            </tr>
+
+        `;
+
+    });
+
+    document.getElementById("tableBody").innerHTML =
+        html;
+
+}
+
+
+/* =====================================
+   LAPORAN BERKALA
+===================================== */
+
+function laporanBerkala(data) {
+
+    document.getElementById("judulLaporan").textContent =
+        "STATUS KENAIKAN GAJI BERKALA";
+
+    tampilkanRekap(
+        hitungStatus(data, "statusBerkala")
+    );
+
+    document.getElementById("tableHead").innerHTML = `
+
+        <tr>
+
+            <th>No</th>
+            <th>NIP</th>
+            <th>Nama</th>
+            <th>KGB</th>
+            <th>Berkala Sekarang</th>
+            <th>Sisa Hari</th>
+            <th>Status</th>
+
+        </tr>
+    `;
+
+    let html = "";
+
+    data.forEach(function(item, index) {
+
+        html += `
+
+            <tr>
+
+                <td class="center">
+                    ${index + 1}
+                </td>
+
+                <td>
+                    ${item.nip}
+                </td>
+
+                <td>
+                    ${item.nama}
+                </td>
+
+                <td class="center">
+                    ${item.kgb}
+                </td>
+
+                <td class="center">
+                    ${item.berkalaSekarang}
+                </td>
+
+                <td class="center">
+                    ${item.sisaHariBerkala}
+                </td>
+
+                <td class="status-cell ${classStatus(item.statusBerkala)}">
+                    ${item.statusBerkala}
+                </td>
+
+            </tr>
+
+        `;
+
+    });
+
+    document.getElementById("tableBody").innerHTML =
+        html;
+
+}
+
+
+/* =====================================
+   LAPORAN MASA KERJA
+===================================== */
+
+function laporanMasaKerja(data) {
+
+    document.getElementById("judulLaporan").textContent =
+        "SISA MASA KERJA PEGAWAI";
+
+    /*
+       Rekap status tidak diperlukan
+       untuk laporan masa kerja
+    */
+
+    document.getElementById("rekapStatus").style.display =
+        "none";
+
+    document.getElementById("tableHead").innerHTML = `
+
+        <tr>
+
+            <th>No</th>
+            <th>NIP</th>
+            <th>Nama</th>
+            <th>Sisa Masa Kerja</th>
+            <th>Tanggal Pensiun</th>
+
+        </tr>
+    `;
+
+    /*
+       Urutkan dari sisa masa kerja
+       paling sedikit
+    */
+
+    data.sort(function(a, b) {
+
+        return (
+            Number(a.sisaMasaKerja || 0) -
+            Number(b.sisaMasaKerja || 0)
+        );
+
+    });
+
+    let html = "";
+
+    data.forEach(function(item, index) {
+
+        html += `
+
+            <tr>
+
+                <td class="center">
+                    ${index + 1}
+                </td>
+
+                <td>
+                    ${item.nip}
+                </td>
+
+                <td>
+                    ${item.nama}
+                </td>
+
+                <td class="center">
+                    ${item.sisaMasaKerja}
+                    Tahun
+                </td>
+
+                <td class="center">
+                    ${item.tglPensiun}
+                </td>
+
+            </tr>
+
+        `;
+
+    });
+
+    document.getElementById("tableBody").innerHTML =
+        html;
+
+}
+
+
+/* =====================================
+   HITUNG STATUS
+===================================== */
+
+function hitungStatus(data, field) {
+
+    const hasil = {
+
+        Aman: 0,
+        "H-90": 0,
+        "H-60": 0,
+        "H-30": 0,
+        "H-7": 0
+
+    };
+
+    data.forEach(function(item) {
+
+        const status = item[field];
+
+        if (hasil.hasOwnProperty(status)) {
+
+            hasil[status]++;
+
+        }
+
+    });
+
+    return hasil;
+
+}
+
+
+/* =====================================
+   AMBIL DATA
+===================================== */
+
+fetch(URL_APP_SCRIPT)
+
+.then(function(response) {
+
+    if (!response.ok) {
+
+        throw new Error(
+            "HTTP Error: " + response.status
+        );
+
+    }
+
+    return response.json();
+
+})
+
+.then(function(result) {
+
+    if (
+        !result ||
+        result.status !== "success"
+    ) {
+
+        throw new Error(
+            "Data laporan tidak valid."
+        );
+
+    }
+
+    const data = result.data || [];
+
+    document.getElementById("tanggalCetak").textContent =
+        tanggalSekarang();
+
+    document.getElementById("totalPegawai").textContent =
+        data.length;
+
+
+    /*
+       PILIH JENIS LAPORAN
+    */
+
+    if (jenis === "pangkat") {
+
+        laporanPangkat(data);
+
+    }
+
+    else if (jenis === "berkala") {
+
+        laporanBerkala(data);
+
+    }
+
+    else if (jenis === "masakerja") {
+
+        laporanMasaKerja(data);
+
+    }
+
+    else {
+
+        laporanPangkat(data);
+
+    }
+
+
+    document.getElementById("loading").style.display =
+        "none";
+
+    document.getElementById("laporan").style.display =
+        "block";
+
+})
+
+.catch(function(error) {
+
+    console.error(error);
+
+    document.getElementById("loading").innerHTML = `
+
+        <div class="error">
+
+            Gagal mengambil data laporan.
+
+            <br><br>
+
+            ${error.message}
+
+        </div>
+
+    `;
+
+});
+
+</script>
+
+</body>
+</html>
